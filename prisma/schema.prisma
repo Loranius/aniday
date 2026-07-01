@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")      // pooled connection (для запитів у serverless)
+  directUrl = env("DIRECT_URL")        // пряме з'єднання (для міграцій)
+}
+
+enum AuthProvider {
+  password
+  google
+}
+
+model User {
+  id           String          @id @default(cuid())
+  username     String          @unique
+  email        String?         @unique
+  // passwordHash відсутній для OAuth-користувачів (google) — вони не мають пароля
+  passwordHash String?
+  provider     AuthProvider    @default(password)
+  providerId   String?         // sub/id від Google
+  avatarUrl    String?
+  createdAt    DateTime        @default(now())
+  watchlist    WatchlistEntry[]
+
+  @@unique([provider, providerId])
+}
+
+enum WatchStatus {
+  watching
+  planned
+  completed
+  on_hold
+  dropped
+}
+
+model WatchlistEntry {
+  id              String      @id @default(cuid())
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+  animeId         Int         // ID з Shikimori — метадані підтягуються звідти на клієнті
+  animeTitle      String      // кешуємо назву, щоб не робити зайвий запит для списків
+  animeImage      String?     // кешуємо прев'ю постера
+  totalEpisodes   Int         @default(0)
+  status          WatchStatus @default(planned)
+  currentEpisode  Int         @default(0)
+  score           Int?        // оцінка користувача 1-10
+  updatedAt       DateTime    @updatedAt
+  createdAt       DateTime    @default(now())
+
+  @@unique([userId, animeId])
+  @@index([userId, status])
+}
+
+model Episode {
+  id            String   @id @default(cuid())
+  animeId       Int
+  episodeNumber Int
+  videoUrl      String   // посилання на ВАШ власний легальний файл/стрім (не сторонній сайт)
+  audioLanguage String   @default("ukr") // навмисно завжди "ukr" — інші мови в цьому застосунку не потрібні
+  duration      Int?     // тривалість у секундах, якщо відомо
+  createdAt     DateTime @default(now())
+
+  @@unique([animeId, episodeNumber])
+  @@index([animeId])
+}
