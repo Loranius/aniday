@@ -1,0 +1,123 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --app-bg: #f4f5f7;
+  --app-surface: #ffffff;
+  --app-surface-2: #eef0f3;
+  --app-line: #dfe3e8;
+  --app-fg: #0f1419;
+  --app-muted: #5d6b7a;
+  --app-accent: #0a84d6;
+  --app-accent-fg: #ffffff;
+  --app-ok: #16a34a;
+  --app-soon: #d97706;
+  --app-due: #dc2626;
+  --app-overdue: #7f1d1d;
+  color-scheme: light;
+}
+
+.dark {
+  --app-bg: #0b0d10;
+  --app-surface: #14181d;
+  --app-surface-2: #1c2128;
+  --app-line: #262c35;
+  --app-fg: #e8ecf1;
+  --app-muted: #8b95a5;
+  --app-accent: #4cc2ff;
+  --app-accent-fg: #04121c;
+  --app-ok: #34d399;
+  --app-soon: #fbbf24;
+  --app-due: #f87171;
+  --app-overdue: #fca5a5;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--app-bg);
+  --color-surface: var(--app-surface);
+  --color-surface-2: var(--app-surface-2);
+  --color-line: var(--app-line);
+  --color-fg: var(--app-fg);
+  --color-muted: var(--app-muted);
+  --color-accent: var(--app-accent);
+  --color-accent-fg: var(--app-accent-fg);
+  --color-ok: var(--app-ok);
+  --color-soon: var(--app-soon);
+  --color-due: var(--app-due);
+  --color-overdue: var(--app-overdue);
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--app-bg);
+  color: var(--app-fg);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Map markers (rendered as Leaflet divIcons) */
+.map-icon {
+  background: transparent;
+  border: none;
+}
+.vehicle-marker {
+  width: 30px;
+  height: 30px;
+  border-radius: 9999px;
+  background: var(--app-accent);
+  color: var(--app-accent-fg);
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  box-shadow: 0 0 0 3px rgb(0 0 0 / 0.35);
+}
+.place-marker {
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  background: var(--app-surface);
+  border: 1px solid var(--app-line);
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+}
+.endpoint {
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  border: 3px solid var(--app-surface);
+}
+.endpoint-start {
+  background: var(--app-ok);
+}
+.endpoint-end {
+  background: var(--app-due);
+}
+.leaflet-container {
+  background: var(--app-surface-2);
+  font-family: var(--font-sans);
+}
+.leaflet-control-attribution {
+  font-size: 10px;
+}

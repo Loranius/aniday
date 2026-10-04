@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Пробіг</string>
+    <string name="title_activity_main">Пробіг</string>
+    <string name="package_name">ua.probih.app</string>
+    <string name="custom_url_scheme">ua.probih.app</string>
+    <string name="capacitor_background_geolocation_notification_channel_name">Запис поїздки</string>
+</resources>
