@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Compile-time stand-in for the one game type the mod inherits from (IClickableMenu).
+       Everything else in the game is accessed via reflection. Never shipped. -->
+  <PropertyGroup>
+    <AssemblyName>Stardew Valley</AssemblyName>
+    <RootNamespace>StardewValley</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" PrivateAssets="all" ExcludeAssets="runtime" />
+  </ItemGroup>
+</Project>

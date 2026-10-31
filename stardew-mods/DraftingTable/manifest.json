@@ -1,0 +1,10 @@
+{
+  "Name": "Drafting Table (Стіл проєктування)",
+  "Author": "Loranius",
+  "Version": "1.0.0",
+  "Description": "A drafting table that opens a top-down farm planner: order Robin's buildings and lay out decorations, paths and machines from your inventory.",
+  "UniqueID": "Loranius.DraftingTable",
+  "EntryDll": "DraftingTable.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": []
+}

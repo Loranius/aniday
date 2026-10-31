@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Compile-time stand-in for SMAPI's public API. Never shipped: the real StardewModdingAPI.dll is used at runtime. -->
+  <PropertyGroup>
+    <AssemblyName>StardewModdingAPI</AssemblyName>
+    <RootNamespace>StardewModdingAPI</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" PrivateAssets="all" ExcludeAssets="runtime" />
+  </ItemGroup>
+</Project>
