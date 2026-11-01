@@ -15,7 +15,7 @@ await client.signInUserWithQrCode({ apiId, apiHash }, {
     console.log('tg://login?token=' + token.toString('base64url') + '\n(посилання оновлюється кожні ~30 с)\n');
   },
   password: async () => ask('Пароль 2FA: '),
-  onError: async (e) => { console.error(e.message || e); return false; },
+  onError: async (e) => { console.error('Помилка:', e.errorMessage || e.message || e); if (e.seconds) console.error(`Telegram просить зачекати ${Math.ceil(e.seconds / 60)} хв. Скрипт зупинено.`); return true; },
 });
 console.log('\n=== TG_SESSION ===\n' + client.session.save() + '\n');
 process.exit(0);

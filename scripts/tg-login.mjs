@@ -13,7 +13,7 @@ await client.start({
   phoneNumber: () => rl.question('Ваш номер телефону (+380...): '),
   phoneCode: () => rl.question('Код з Telegram: '),
   password: () => rl.question('Пароль 2FA (якщо є): '),
-  onError: (e) => console.error(e),
+  onError: async (e) => { console.error('Помилка:', e.errorMessage || e.message || e); if (e.seconds) console.error(`Telegram просить зачекати ${Math.ceil(e.seconds / 60)} хв. Скрипт зупинено.`); return true; },
 });
 
 console.log('\nTG_SESSION (тримайте в секреті, це доступ до акаунта):\n');
