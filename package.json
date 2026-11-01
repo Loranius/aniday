@@ -10,21 +10,23 @@
     "prisma:studio": "prisma studio"
   },
   "dependencies": {
+    "@prisma/client": "5.17.0",
+    "bcryptjs": "^2.4.3",
+    "big-integer": "^1.6.52",
+    "google-auth-library": "^9.11.0",
+    "jsonwebtoken": "^9.0.2",
     "next": "14.2.5",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "@prisma/client": "5.17.0",
-    "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2",
-    "zod": "^3.23.8",
-    "google-auth-library": "^9.11.0"
+    "telegram": "^2.26.22",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
-    "prisma": "5.17.0",
-    "typescript": "^5.5.4",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^20.14.11",
     "@types/react": "^18.3.3",
-    "@types/bcryptjs": "^2.4.6",
-    "@types/jsonwebtoken": "^9.0.6"
+    "prisma": "5.17.0",
+    "typescript": "^5.5.4"
   }
 }

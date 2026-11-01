@@ -101,3 +101,24 @@ export default api;
 ```
 
 Далі: `api.post('/auth/login', { username, password })`, `api.get('/watchlist')` і так далі.
+
+## Телеграм за номером телефону (`/tg`)
+
+Сторінка `https://<project>.vercel.app/tg`: вводите номер і отримуєте **нікнейм**, **Telegram ID** та ім'я, якщо номер зареєстрований у Telegram.
+Під капотом ендпоінт `GET /api/tg/check?phone=380671234567` (заголовок `X-Access-Key`) через **ваш** Telegram-акаунт тимчасово додає номер у контакти, читає дані користувача й одразу видаляє контакт.
+
+Налаштування (один раз):
+
+1. На https://my.telegram.org → **API development tools** створіть додаток і скопіюйте `api_id` та `api_hash`.
+2. Локально отримайте сесію (попросить ваш номер і код з Telegram):
+   ```bash
+   npm install
+   TG_API_ID=... TG_API_HASH=... node scripts/tg-login.mjs
+   ```
+3. У Vercel → Settings → Environment Variables додайте:
+   - `TG_API_ID`, `TG_API_HASH` — з кроку 1
+   - `TG_SESSION` — рядок із кроку 2 (**це повний доступ до акаунта, нікому не передавайте**)
+   - `TG_ACCESS_KEY` — будь-який довгий пароль (`openssl rand -hex 16`), його вводите на сторінці
+4. Redeploy.
+
+Обмеження: «не знайдено» означає, що номера немає в Telegram **або** людина заборонила пошук за номером. Telegram обмежує кількість таких перевірок (сервер поверне 429), тому для масових перевірок це не підходить.
