@@ -4,7 +4,7 @@ import { getAuthUser, JwtPayload } from './auth';
 export type AuthedRequest = NextApiRequest & { user: JwtPayload };
 
 export function withAuth(
-  handler: (req: AuthedRequest, res: NextApiResponse) => Promise<void> | void
+  handler: (req: AuthedRequest, res: NextApiResponse) => unknown
 ) {
   return async (req: NextApiRequest, res: NextApiResponse) => {
     const user = getAuthUser(req);
