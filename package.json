@@ -10,7 +10,7 @@
     "prisma:studio": "prisma studio",
     "test": "vitest run",
     "postinstall": "prisma generate && prisma generate --schema prisma/signals.prisma",
-    "signals:migrate": "prisma migrate dev --schema prisma/signals.prisma"
+    "signals:db-push": "prisma db push --schema prisma/signals.prisma"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.12.0",
