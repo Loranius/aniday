@@ -1,0 +1,67 @@
+// Окрема БД сигнального бота (free Supabase Postgres), не пов'язана з AniDay.
+datasource db {
+  provider  = "postgresql"
+  url       = env("SIGNALS_DATABASE_URL")
+  directUrl = env("SIGNALS_DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/signals/generated"
+}
+
+model Signal {
+  id                String    @id @default(cuid())
+  dedupeKey         String    @unique // ${mode}:${symbol}:${direction}:${candleTs}
+  mode              String
+  group             String
+  symbol            String
+  direction         String
+  timeframe         String
+  pattern           String
+  entryLow          Float
+  entryHigh         Float
+  stop              Float
+  tp1               Float
+  tp2               Float?
+  metrics           Json
+  sizing            Json
+  claudeReason      String?
+  status            String
+  entryDeadline     DateTime
+  filledAt          DateTime?
+  timeoutAt         DateTime?
+  closedAt          DateTime?
+  fillPrice         Float?
+  tp1Hit            Boolean   @default(false)
+  closeReason       String?
+  resultR           Float?
+  lastCheckedTs     BigInt
+  telegramMessageId Int?
+  createdAt         DateTime  @default(now())
+
+  @@index([status])
+  @@index([symbol, direction, status])
+  @@index([createdAt])
+}
+
+model Settings {
+  id              Int      @id @default(1)
+  depositUsd      Float    @default(500)
+  riskScalp       Float    @default(1)
+  riskIntraday    Float    @default(2)
+  riskPump        Float    @default(1)
+  paused          String[]
+  scalpDailyLimit Int      @default(10)
+}
+
+model ClaudeSpend {
+  day     String @id // YYYY-MM-DD (Europe/Kyiv)
+  costUsd Float
+  calls   Int
+}
+
+model MarketSnapshot {
+  ts   DateTime @id
+  data Json
+}

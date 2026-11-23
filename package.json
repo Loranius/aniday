@@ -4,11 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "prisma generate && prisma generate --schema prisma/signals.prisma && next build",
     "start": "next start",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "test": "vitest run"
+    "test": "vitest run",
+    "postinstall": "prisma generate && prisma generate --schema prisma/signals.prisma",
+    "signals:migrate": "prisma migrate dev --schema prisma/signals.prisma"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.12.0",
