@@ -43,6 +43,8 @@ export const SIGNALS_CONFIG = {
     snapshotToleranceMin: 5,
   },
   scalpDailyLimit: 10,
+  // межі значень, які власник задає командами Telegram
+  commandBounds: { riskMinPct: 0.1, riskMaxPct: 50, depositMinUsd: 0, scalpLimitMin: 0, scalpLimitMax: 100 },
   maxReviewsPerRun: 5,
   tz: 'Europe/Kyiv',
   strategies: {
