@@ -59,4 +59,14 @@ describe('runScan scalp з кандидатом', () => {
     expect(repo.signals).toHaveLength(0);
     expect(reviewer.calls).toHaveLength(0);
   });
+
+  it('ліміт 1, два кандидати в одному запуску → відправлено 1', async () => {
+    repo.settings.scalpDailyLimit = 1;
+    market.tickerList = [tk('SOLUSDT'), tk('ETHUSDT')];
+    market.data.ETHUSDT = market.data.SOLUSDT;
+    vi.mocked(detectScalp).mockImplementation((symbol) => cand(symbol, T0 + 99 * 300_000));
+    const r = await runScan('scalp', deps());
+    expect(r[0]).toMatchObject({ candidates: 2, sent: 1, skipped: 1 });
+    expect(repo.signals).toHaveLength(1);
+  });
 });

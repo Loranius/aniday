@@ -157,6 +157,23 @@ describe('runScan swing', () => {
   });
 });
 
+describe('review-safety', () => {
+  it('reject у першому запуску → рецензент викликано рівно раз за два запуски', async () => {
+    reviewer.review_ = { decision: 'reject', reason: 'x' };
+    await runScan('swing', deps());
+    await runScan('swing', deps());
+    expect(reviewer.calls).toHaveLength(1);
+  });
+
+  it('spendSince кидає → бюджет вичерпано: no_claude, рецензента не викликано, помилка записана', async () => {
+    repo.spendSince = async () => { throw new Error('db down'); };
+    const r = await runScan('swing', deps());
+    expect(reviewer.calls).toHaveLength(0);
+    expect(repo.signals[0].group).toBe('no_claude');
+    expect(intraday(r).errors.some((e) => e.startsWith('budget:'))).toBe(true);
+  });
+});
+
 describe('runScan scalp', () => {
   it('без кандидатів → жодного виклику repo', async () => {
     market.data.SOLUSDT = { '5m': makeCandles(new Array(100).fill(100), 300_000), '1m': makeCandles(new Array(60).fill(100), 60_000) };

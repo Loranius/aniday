@@ -66,6 +66,9 @@ class RunCtx {
     })();
     await this.spendP;
   }
+  failSpend(): void {
+    this.spend = { today: Infinity, month: Infinity };
+  }
   canSpendNow(): boolean {
     return canSpend(this.spend.today, this.spend.month);
   }
@@ -81,6 +84,8 @@ class RunCtx {
     this.spend.month += cost - reserved;
   }
 }
+
+const dedupeKeyOf = (mode: Mode, c: Candidate) => `${mode}:${c.symbol}:${c.direction}:${c.candleTs}`;
 
 // Перераховує стоп/тейки за коригуванням Claude, зберігаючи R-структуру режиму
 function applyReview(c: Candidate, review: Review): Candidate {
@@ -113,10 +118,13 @@ async function processMode(mode: Mode, found: Found[], ctx: RunCtx, report: Mode
   const eligible: Found[] = [];
   for (const f of found) {
     try {
+      const key = dedupeKeyOf(mode, f.candidate);
+      if (await repo.existsByDedupeKey(key)) { report.skipped++; continue; }
       if (await repo.hasActive(f.candidate.symbol, f.candidate.direction)) { report.skipped++; continue; }
       if (mode === 'scalp') {
         ctx.scalpSent ??= await repo.countSentToday('scalp', kyivDayStartMs(now()));
         if (ctx.scalpSent >= settings.scalpDailyLimit) { report.skipped++; continue; }
+        ctx.scalpSent++; // резервуємо місце під ліміт одразу, щоб запуск не перевищив його
       }
       eligible.push(f);
     } catch (e) {
@@ -127,7 +135,10 @@ async function processMode(mode: Mode, found: Found[], ctx: RunCtx, report: Mode
 
   // 2) рецензії паралельно, у межах бюджету та maxReviewsPerRun
   type Outcome = { f: Found; group: SignalGroup; review: Review | null };
-  await ctx.loadSpend().catch((e) => { report.errors.push(`budget: ${errMsg(e)}`); });
+  await ctx.loadSpend().catch((e) => {
+    ctx.failSpend(); // не знаємо витрат → вважаємо бюджет вичерпаним
+    report.errors.push(`budget: ${errMsg(e)}`);
+  });
   const jobs: Promise<Outcome | null>[] = [];
   for (const f of eligible) {
     if (!ctx.canSpendNow()) {
@@ -172,14 +183,13 @@ async function processMode(mode: Mode, found: Found[], ctx: RunCtx, report: Mode
       const state = initialState(c, mode, createdAt);
       const row: NewSignal = {
         ...state,
-        dedupeKey: `${mode}:${symbol}:${c.direction}:${c.candleTs}`,
+        dedupeKey: dedupeKeyOf(mode, c),
         mode, group, symbol, timeframe: c.timeframe, pattern: c.pattern, metrics: c.metrics, sizing, claudeReason,
       };
       const ins = await repo.insertSignal(row);
-      if (!ins) { report.skipped++; continue; }
-      if (group === 'shadow') { report.shadow++; continue; }
+      if (!ins) { report.skipped++; if (mode === 'scalp') ctx.scalpSent!--; continue; }
+      if (group === 'shadow') { report.shadow++; if (mode === 'scalp') ctx.scalpSent!--; continue; }
       report.sent++;
-      if (mode === 'scalp') ctx.scalpSent = (ctx.scalpSent ?? 0) + 1;
       const text = formatSignal(c, sizing, group, claudeReason, state.entryDeadline, contract.pricePlace, riskPct);
       const msgId = await notifier.send(text);
       if (msgId !== null) await repo.setMessageId(ins.id, msgId);

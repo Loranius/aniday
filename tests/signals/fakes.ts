@@ -32,6 +32,7 @@ export class FakeRepo implements SignalsRepo {
     this.signals.push({ ...s, id, telegramMessageId: null });
     return { id };
   }
+  async existsByDedupeKey(key: string) { this.calls.push('existsByDedupeKey'); return this.signals.some((x) => x.dedupeKey === key); }
   async hasActive(symbol: string, direction: 'long' | 'short') {
     this.calls.push('hasActive');
     return this.signals.some(

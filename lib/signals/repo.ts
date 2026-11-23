@@ -44,6 +44,7 @@ export interface SignalsRepo {
   updateSettings(p: Partial<SettingsT>): Promise<SettingsT>;
   insertSignal(s: NewSignal): Promise<{ id: string } | null>;
   hasActive(symbol: string, direction: Direction): Promise<boolean>;
+  existsByDedupeKey(key: string): Promise<boolean>;
   countSentToday(mode: Mode, dayStartMs: number): Promise<number>;
   listActive(): Promise<SignalRow[]>;
   saveTrackState(id: string, st: TrackState): Promise<void>;
@@ -126,6 +127,11 @@ export function createRepo(db: PrismaClient = signalsPrisma): SignalsRepo {
         if ((e as { code?: string }).code === 'P2002') return null; // дубль dedupeKey
         throw e;
       }
+    },
+
+    async existsByDedupeKey(key) {
+      const r = await db.signal.findUnique({ where: { dedupeKey: key }, select: { id: true } });
+      return r !== null;
     },
 
     async hasActive(symbol, direction) {
