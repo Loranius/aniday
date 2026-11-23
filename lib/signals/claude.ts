@@ -58,8 +58,14 @@ function stopAcceptable(c: Candidate, stop: number): boolean {
   if (cap === null) return true;
   const atr = c.metrics.atr;
   if (!(atr > 0)) return false;
-  const dist = c.direction === 'long' ? c.entryHigh - stop : stop - c.entryLow;
+  const dist = Math.abs((c.entryLow + c.entryHigh) / 2 - stop);
   return dist <= cap * atr;
+}
+
+function tp1Acceptable(c: Candidate, tp1: number): boolean {
+  if (!Number.isFinite(tp1)) return false;
+  if (c.direction === 'long') return tp1 > c.entryHigh && (c.tp2 === null || tp1 < c.tp2);
+  return tp1 < c.entryLow && (c.tp2 === null || tp1 > c.tp2);
 }
 
 export function createClaudeReviewer(client: Anthropic): Reviewer {
@@ -86,7 +92,7 @@ export function createClaudeReviewer(client: Anthropic): Reviewer {
         const review: Review = { decision: p.decision, reason: p.reason.slice(0, cfg.reasonMaxChars) };
         if (p.decision === 'confirm') {
           if (p.stop !== undefined && stopAcceptable(c, p.stop)) review.stop = p.stop;
-          if (p.tp1 !== undefined && Number.isFinite(p.tp1)) review.tp1 = p.tp1;
+          if (p.tp1 !== undefined && tp1Acceptable(c, p.tp1)) review.tp1 = p.tp1;
         }
         return { review, costUsd };
       } catch (e) {

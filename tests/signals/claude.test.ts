@@ -90,4 +90,25 @@ describe('claude reviewer', () => {
     const r = await createClaudeReviewer(client).review(cand({ mode: 'scalp' }), { candles });
     expect(r.review).toEqual({ decision: 'confirm', reason: 'r', stop: 90 });
   });
+  it('tp1 wrong side ignored (long and short)', async () => {
+    const a = mk({ parsed_output: { decision: 'confirm', reason: 'r', tp1: 100.5 }, stop_reason: 'end_turn', usage });
+    expect((await createClaudeReviewer(a.client).review(cand(), { candles })).review).toEqual({ decision: 'confirm', reason: 'r' });
+    const b = mk({ parsed_output: { decision: 'confirm', reason: 'r', tp1: 102 }, stop_reason: 'end_turn', usage });
+    const r = await createClaudeReviewer(b.client).review(cand({ direction: 'short', stop: 103, tp1: 96, tp2: 92 }), { candles });
+    expect(r.review).toEqual({ decision: 'confirm', reason: 'r' });
+  });
+  it('tp1 beyond tp2 ignored', async () => {
+    const a = mk({ parsed_output: { decision: 'confirm', reason: 'r', tp1: 109 }, stop_reason: 'end_turn', usage });
+    expect((await createClaudeReviewer(a.client).review(cand(), { candles })).review).toEqual({ decision: 'confirm', reason: 'r' });
+    const b = mk({ parsed_output: { decision: 'confirm', reason: 'r', tp1: 91 }, stop_reason: 'end_turn', usage });
+    const r = await createClaudeReviewer(b.client).review(cand({ direction: 'short', stop: 103, tp1: 96, tp2: 92 }), { candles });
+    expect(r.review).toEqual({ decision: 'confirm', reason: 'r' });
+  });
+  it('stop cap measured from entry midpoint (boundary)', async () => {
+    // mid 100.5, atr 1 -> cap 3 => 97.5 ok, 97.4 rejected
+    const ok = mk({ parsed_output: { decision: 'confirm', reason: 'r', stop: 97.5 }, stop_reason: 'end_turn', usage });
+    expect((await createClaudeReviewer(ok.client).review(cand(), { candles })).review).toEqual({ decision: 'confirm', reason: 'r', stop: 97.5 });
+    const bad = mk({ parsed_output: { decision: 'confirm', reason: 'r', stop: 97.4 }, stop_reason: 'end_turn', usage });
+    expect((await createClaudeReviewer(bad.client).review(cand(), { candles })).review).toEqual({ decision: 'confirm', reason: 'r' });
+  });
 });
