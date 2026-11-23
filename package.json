@@ -7,9 +7,11 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "test": "vitest run"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.12.0",
     "@prisma/client": "5.17.0",
     "bcryptjs": "^2.4.3",
     "big-integer": "^1.6.52",
@@ -27,6 +29,7 @@
     "@types/node": "^20.14.11",
     "@types/react": "^18.3.3",
     "prisma": "5.17.0",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "vitest": "^3.2.7"
   }
 }
