@@ -12,9 +12,6 @@ export interface PumpPre {
 }
 
 const MIN_MS = 60_000;
-const TOLERANCE_MS = 5 * MIN_MS;
-const VOL_BURST_MIN_PCT = 3;
-const OI_CHANGE_MIN_PCT = 5;
 
 export function topByVolume(tickers: Ticker[], n: number): string[] {
   return [...tickers]
@@ -30,19 +27,21 @@ export function makeSnapshot(tickers: Ticker[], now: number): Snapshot {
 }
 
 function nearest(snapshots: Snapshot[], target: number): Snapshot | null {
+  const toleranceMs = SIGNALS_CONFIG.universe.snapshotToleranceMin * MIN_MS;
   let best: Snapshot | null = null;
   for (const s of snapshots) {
     const d = Math.abs(s.ts - target);
-    if (d <= TOLERANCE_MS && (!best || d < Math.abs(best.ts - target))) best = s;
+    if (d <= toleranceMs && (!best || d < Math.abs(best.ts - target))) best = s;
   }
   return best;
 }
 
 export function pumpPrefilter(tickers: Ticker[], top: Set<string>, snapshots: Snapshot[], now: number): PumpPre[] {
-  const s15 = nearest(snapshots, now - 15 * MIN_MS);
-  const s30 = nearest(snapshots, now - 30 * MIN_MS);
+  const u = SIGNALS_CONFIG.universe;
+  const s15 = nearest(snapshots, now - u.pumpVolLookbackMin * MIN_MS);
+  const s30 = nearest(snapshots, now - u.pumpOiLookbackMin * MIN_MS);
   if (!s15 || !s30) return [];
-  const { pumpMinQuoteVolume24h, pumpMaxCandidates } = SIGNALS_CONFIG.universe;
+  const { pumpMinQuoteVolume24h, pumpMaxCandidates } = u;
   const out: PumpPre[] = [];
   for (const t of tickers) {
     if (top.has(t.symbol) || t.quoteVolume24h < pumpMinQuoteVolume24h) continue;
@@ -51,7 +50,7 @@ export function pumpPrefilter(tickers: Ticker[], top: Set<string>, snapshots: Sn
     if (!v15 || !o30) continue;
     const volBurstPct = ((t.quoteVolume24h - v15.quoteVolume24h) / t.quoteVolume24h) * 100;
     const oiChangePct = o30.openInterest > 0 ? ((t.openInterest - o30.openInterest) / o30.openInterest) * 100 : 0;
-    if (volBurstPct >= VOL_BURST_MIN_PCT || oiChangePct >= OI_CHANGE_MIN_PCT) {
+    if (volBurstPct >= u.pumpVolBurstMinPct || oiChangePct >= u.pumpOiChangeMinPct) {
       out.push({ symbol: t.symbol, volBurstPct, oiChangePct });
     }
   }
