@@ -20,7 +20,17 @@ export const SIGNALS_CONFIG = {
     'claude-sonnet-5-5': { input: 2, output: 10 },
     'claude-haiku-5-5': { input: 0.1, output: 0.5 },
   } as Record<string, { input: number; output: number }>,
-  budget: { monthlyUsd: 20, dailyUsd: 20 / 30 },
+  budget: { monthlyUsd: 20, dailyUsd: 20 / 30, reserveUsd: 0.02, reserveHaikuUsd: 0.002 },
+  // множники ціни кешу промпта відносно ціни вхідних токенів
+  cache: { readMult: 0.1, writeMult: 1.25 },
+  claude: {
+    maxTokens: 2000,
+    maxRetries: 1,
+    candlesInPrompt: 40,
+    reasonMaxChars: 200,
+    timeoutMs: { 'claude-haiku-5-5': 20_000, 'claude-sonnet-5-5': 40_000 } as Record<string, number>,
+    defaultTimeoutMs: 40_000,
+  },
   sizing: { defaultDepositUsd: 500, maxMarginPct: 20, maxLeverage: 20, mmr: 0.005, highRiskWarnPct: 5 },
   universe: {
     topN: 20,
