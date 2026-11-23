@@ -21,7 +21,7 @@ export const SIGNALS_CONFIG = {
     'claude-haiku-5-5': { input: 0.1, output: 0.5 },
   } as Record<string, { input: number; output: number }>,
   budget: { monthlyUsd: 20, dailyUsd: 20 / 30 },
-  sizing: { defaultDepositUsd: 500, maxMarginPct: 20, maxLeverage: 20, mmr: 0.005 },
+  sizing: { defaultDepositUsd: 500, maxMarginPct: 20, maxLeverage: 20, mmr: 0.005, highRiskWarnPct: 5 },
   universe: {
     topN: 20,
     pumpMinQuoteVolume24h: 5_000_000,
