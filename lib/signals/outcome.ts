@@ -78,7 +78,9 @@ export function advance(state: TrackState, candles: Candle[], mode: Mode, now: n
       s.lastCheckedTs = k.ts;
       if (!touched) continue;
       s.status = 'open';
-      s.fillPrice = (s.entryLow + s.entryHigh) / 2;
+      // середина зони, якщо свічка дійшла до неї; інакше лише край зони (песимістично)
+      const mid = (s.entryLow + s.entryHigh) / 2;
+      s.fillPrice = long ? (k.low <= mid ? mid : s.entryHigh) : (k.high >= mid ? mid : s.entryLow);
       s.filledAt = k.ts;
       s.timeoutAt = k.ts + timeoutMs;
       // на свічці входу перевіряється лише стоп
@@ -114,8 +116,10 @@ export function advance(state: TrackState, candles: Candle[], mode: Mode, now: n
       }
       s.tp1Hit = true;
       // s.stop лишається початковим (з нього рахується risk); ефективний стоп = fill, див. stopLevel
-      // TP1 і TP2 в одній свічці без торкання стопу — TP2
-      if (reached(s.tp2)) {
+      // свічка TP1 торкнулась ціни входу: порядок невідомий, беззбиток перемагає
+      if (long ? k.low <= fill : k.high >= fill) {
+        close(s, k.ts, 'breakeven', 0.5 * moveR(s.direction, fill, s.tp1, risk));
+      } else if (reached(s.tp2)) {
         close(s, k.ts, 'tp2', 0.5 * moveR(s.direction, fill, s.tp1, risk) + 0.5 * moveR(s.direction, fill, s.tp2, risk));
       }
       continue;
