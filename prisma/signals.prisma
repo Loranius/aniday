@@ -1,4 +1,4 @@
-// Окрема БД сигнального бота (free Supabase Postgres), не пов'язана з AniDay.
+// Окрема БД сигнального бота (free Supabase Postgres).
 datasource db {
   provider  = "postgresql"
   url       = env("SIGNALS_DATABASE_URL")

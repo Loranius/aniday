@@ -1,6 +1,6 @@
 import { PrismaClient } from './generated';
 
-// Окремий клієнт для БД бота (Supabase). Кешуємо у globalThis, як lib/prisma.ts.
+// Окремий клієнт для БД бота (Supabase). Кешуємо у globalThis, щоб serverless-інстанс не створював нові з’єднання.
 const globalForSignals = globalThis as unknown as { signalsPrisma?: PrismaClient };
 
 export const signalsPrisma =
