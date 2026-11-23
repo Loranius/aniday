@@ -46,6 +46,11 @@ export const SIGNALS_CONFIG = {
   // межі значень, які власник задає командами Telegram
   commandBounds: { riskMinPct: 0.1, riskMaxPct: 50, depositMinUsd: 0, scalpLimitMin: 0, scalpLimitMax: 100 },
   maxReviewsPerRun: 5,
+  scan: {
+    snapshotWindowMin: 35, // скільки хвилин снапшотів брати для pumpPrefilter
+    candles: { intraday15m: 120, intraday1h: 220, pump15m: 120, scalp5m: 100, scalp1m: 60 },
+  },
+  tracking: { candleLimit: 1000, fiveMinGapHours: 16 },
   tz: 'Europe/Kyiv',
   strategies: {
     intraday: {

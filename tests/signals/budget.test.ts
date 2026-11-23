@@ -27,3 +27,20 @@ describe('budget', () => {
     expect(kyivDay(Date.parse('2026-11-23T21:30:00Z'))).toBe('2026-11-23');
   });
 });
+
+import { kyivDayStartMs } from '../../lib/signals/budget';
+describe('kyivDayStartMs', () => {
+  it('зима (UTC+2)', () => {
+    expect(kyivDayStartMs(Date.UTC(2026, 0, 15, 12))).toBe(Date.UTC(2026, 0, 14, 22));
+  });
+  it('літо (UTC+3)', () => {
+    expect(kyivDayStartMs(Date.UTC(2026, 6, 15, 12))).toBe(Date.UTC(2026, 6, 14, 21));
+  });
+  it('доба переходу на літній час (29.03.2026): початок за зимовим, наступна доба за літнім', () => {
+    expect(kyivDayStartMs(Date.UTC(2026, 2, 29, 12))).toBe(Date.UTC(2026, 2, 28, 22));
+    expect(kyivDayStartMs(Date.UTC(2026, 2, 30, 12))).toBe(Date.UTC(2026, 2, 29, 21));
+  });
+  it('23:30 UTC взимку вже наступна київська доба', () => {
+    expect(kyivDayStartMs(Date.UTC(2026, 0, 15, 23, 30))).toBe(Date.UTC(2026, 0, 15, 22));
+  });
+});
