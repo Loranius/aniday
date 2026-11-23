@@ -57,7 +57,7 @@ export function pumpPrefilter(tickers: Ticker[], top: Set<string>, snapshots: Sn
   return out.sort((a, b) => b.volBurstPct - a.volBurstPct).slice(0, pumpMaxCandidates);
 }
 
-export function hotMovers(tickers: Ticker[], top: Set<string>, n = 10): string[] {
+export function hotMovers(tickers: Ticker[], top: Set<string>, n = SIGNALS_CONFIG.universe.hotMoversN): string[] {
   return tickers
     .filter((t) => !top.has(t.symbol) && t.quoteVolume24h >= SIGNALS_CONFIG.universe.pumpMinQuoteVolume24h)
     .sort((a, b) => Math.abs(b.change24h) - Math.abs(a.change24h))

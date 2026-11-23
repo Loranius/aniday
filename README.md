@@ -136,11 +136,11 @@ export default api;
 4. Напишіть своєму боту `/start`, щоб він міг вам писати.
 
 ### 2. Claude API
-Створіть ключ на https://console.anthropic.com → `ANTHROPIC_API_KEY`. Одразу виставте там **місячний ліміт витрат** — це друга лінія захисту. Власний бюджет бота: ≤ $20 на календарний місяць і ≤ $20/30 на добу (за Києвом); після ліміту сигнали надходять без Claude з позначкою «⚠️ без перевірки Claude».
+Створіть ключ на https://console.anthropic.com → `ANTHROPIC_API_KEY`. Одразу виставте там **місячний ліміт витрат** — це друга лінія захисту. Власний бюджет бота: ≤ $20 на календарний місяць і ≈ $0.67 на добу (≤ $20 на місяць) (за Києвом); після ліміту сигнали надходять без Claude з позначкою «⚠️ без перевірки Claude».
 
 ### 3. База Supabase
 Створіть **новий** проєкт Supabase (не базу AniDay). Project → **Connect** → ORM/Prisma:
-- pooled-URL (порт `6543`) з додатком `?pgbouncer=true` → `SIGNALS_DATABASE_URL`;
+- pooled-URL (порт `6543`) з додатком `?pgbouncer=true&connection_limit=1` → `SIGNALS_DATABASE_URL`;
 - direct/session-URL (порт `5432`) → `SIGNALS_DIRECT_URL`.
 
 Створіть таблиці (один раз, локально, після `npm install`):

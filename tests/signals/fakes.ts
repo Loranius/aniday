@@ -76,13 +76,15 @@ export class FakeMarket implements MarketData {
   failFor = new Set<string>();
   calls: { symbol: string; g: Granularity; limit: number; startTime?: number }[] = [];
   tickerCalls = 0;
+  // як справжній Bitget: з `limit` свічок остання формується й відкидається → limit−1 закритих
+  honourLimit = false;
   async tickers() { this.tickerCalls++; return this.tickerList; }
   async candles(symbol: string, g: Granularity, limit: number, startTime?: number) {
     this.calls.push({ symbol, g, limit, startTime });
     if (this.failFor.has(symbol)) throw new Error('boom');
     let c = this.data[symbol]?.[g] ?? [];
     if (startTime !== undefined) c = c.filter((k) => k.ts >= startTime);
-    return c.slice(-limit);
+    return c.slice(-(this.honourLimit ? limit - 1 : limit));
   }
   async contract(symbol: string): Promise<ContractInfo> {
     return { symbol, pricePlace: 2, volumePlace: 1, minTradeNum: 0.1, maxLeverage: 50 };

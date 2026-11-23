@@ -89,7 +89,7 @@ export function createClaudeReviewer(client: Anthropic): Reviewer {
         if (res.stop_reason === 'refusal') return { review: unavailable('refusal'), costUsd };
         const p = res.parsed_output;
         if (!p) return { review: unavailable('parse_failed'), costUsd };
-        const review: Review = { decision: p.decision, reason: p.reason.slice(0, cfg.reasonMaxChars) };
+        const review: Review = { decision: p.decision, reason: Array.from(p.reason).slice(0, cfg.reasonMaxChars).join('') };
         if (p.decision === 'confirm') {
           if (p.stop !== undefined && stopAcceptable(c, p.stop)) review.stop = p.stop;
           if (p.tp1 !== undefined && tp1Acceptable(c, p.tp1)) review.tp1 = p.tp1;

@@ -4,7 +4,7 @@ import { initialState } from '../../lib/signals/outcome';
 import type { Candidate, Candle } from '../../lib/signals/types';
 import { FakeRepo, FakeMarket, FakeReviewer, FakeNotifier } from './fakes';
 
-const T0 = 1_700_000_000_000;
+const T0 = 1_700_000_040_000; // кратне хвилині
 const cand: Candidate = {
   mode: 'intraday', symbol: 'SOLUSDT', direction: 'long', timeframe: '15m', candleTs: T0,
   entryLow: 99, entryHigh: 101, stop: 95, tp1: 110, tp2: 120, pattern: 'breakout', metrics: { atr: 1 },
@@ -41,7 +41,7 @@ describe('runTracking', () => {
     expect(notifier.sent).toHaveLength(1);
     expect(notifier.sent[0].replyTo).toBe(42);
     expect(notifier.sent[0].text).toContain('TP2');
-    expect(market.calls[0]).toMatchObject({ g: '1m', limit: 1000, startTime: T0 + 1 });
+    expect(market.calls[0]).toMatchObject({ g: '1m', limit: 1000, startTime: T0 });
   });
 
   it('shadow закривається без повідомлення', async () => {

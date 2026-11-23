@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { topByVolume, pumpPrefilter, makeSnapshot, hotMovers } from '../../lib/signals/universe';
+import { SIGNALS_CONFIG } from '../../lib/signals/config';
 import type { Ticker } from '../../lib/signals/types';
 import tickersFx from './fixtures/tickers.json';
 
@@ -84,5 +85,9 @@ describe('hotMovers', () => {
     expect(r).not.toContain('SMALLUSDT');
     expect(r.every((s) => !top.has(s))).toBe(true);
     expect(r).toContain('MIDUSDT');
+  });
+  it('n за замовчуванням береться з конфігу', () => {
+    const many = Array.from({ length: 15 }, (_, i) => tk(`M${i}USDT`, 6_000_000, i / 100));
+    expect(hotMovers(many, new Set())).toHaveLength(SIGNALS_CONFIG.universe.hotMoversN);
   });
 });

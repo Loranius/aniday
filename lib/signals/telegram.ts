@@ -21,7 +21,7 @@ export function createTelegram(token: string, chatId: string, fetchImpl: typeof 
             text,
             parse_mode: 'HTML',
             disable_web_page_preview: true,
-            ...(replyTo ? { reply_to_message_id: replyTo } : {}),
+            ...(replyTo ? { reply_to_message_id: replyTo, allow_sending_without_reply: true } : {}),
           }),
         });
         if (!res.ok) {
@@ -91,7 +91,7 @@ export function formatSignal(
   if (c.tp2 !== null) tp += ` · TP2: ${p(c.tp2)} (${trimNum(rOf(c.tp2))}R)`;
   lines.push(tp);
   lines.push(
-    `Позиція: ${sizing.qty} ≈ $${Math.round(sizing.notionalUsd)} · плече ${sizing.leverage}x · маржа $${Math.round(sizing.marginUsd)}`,
+    `Позиція: ${sizing.qty} ${c.symbol.replace(/USDT$/, '')} ≈ $${Math.round(sizing.notionalUsd)} · плече ${sizing.leverage}x · маржа $${Math.round(sizing.marginUsd)}`,
   );
   const riskPctStr = riskPct === undefined ? '' : ` (${trimNum(riskPct)}%)`;
   lines.push(`Ризик: $${trimNum(sizing.riskUsd)}${riskPctStr} · ліквідація ≈ ${p(sizing.liquidationPrice)} ${liqOk ? '✅' : '⚠️'}`);
@@ -121,7 +121,7 @@ export function formatClose(row: SignalRow): string {
 
 function bucketLine(label: string, b: Bucket): string {
   if (b.total === 0) return `${label}: —`;
-  return `${label}: ${b.total} шт · не спрацювали ${b.notFilled} · win ${(b.winRate * 100).toFixed(0)}% · сер. ${signedR(b.avgR)} · Σ ${signedR(b.sumR)}`;
+  return `${label}: ${b.total} шт · не спрацювали ${b.notFilled} · win ${b.winRate === null ? '—' : `${(b.winRate * 100).toFixed(0)}%`} · сер. ${b.avgR === null ? '—' : signedR(b.avgR)} · Σ ${signedR(b.sumR)}`;
 }
 
 const GROUP_LABEL: Record<SignalGroup, string> = {

@@ -41,7 +41,8 @@ export function initialState(c: Candidate, mode: Mode, createdAt: number): Track
     closedAt: null,
     closeReason: null,
     resultR: null,
-    lastCheckedTs: c.candleTs,
+    // перша врахована 1m-свічка починається не раніше за момент створення сигналу
+    lastCheckedTs: Math.ceil(createdAt / MIN) * MIN - 1,
   };
 }
 

@@ -3,7 +3,7 @@ import { advance, initialState } from '../../lib/signals/outcome';
 import type { Candle, Candidate } from '../../lib/signals/types';
 
 const MIN = 60_000;
-const T0 = 1_700_000_000_000;
+const T0 = 1_700_000_040_000; // кратне хвилині
 const c = (i: number, o: number, h: number, l: number, cl: number): Candle => ({
   ts: T0 + i * 15 * MIN, open: o, high: h, low: l, close: cl, volume: 1, quoteVolume: 1,
 });
@@ -19,9 +19,28 @@ describe('initialState', () => {
     const s = mk();
     expect(s.status).toBe('pending');
     expect(s.entryDeadline).toBe(T0 + 120 * MIN);
-    expect(s.lastCheckedTs).toBe(T0 - 15 * MIN);
+    expect(s.lastCheckedTs).toBe(T0 - 1); // перша врахована 1m-свічка ≥ createdAt
     expect(s.timeoutAt).toBeNull();
     expect(s.resultR).toBeNull();
+  });
+});
+
+describe('свічки до створення сигналу не враховуються', () => {
+  const early = (ts: number, o: number, h: number, l: number, cl: number): Candle => ({ ts, open: o, high: h, low: l, close: cl, volume: 1, quoteVolume: 1 });
+  it('свічка до createdAt, що торкається зони/TP, ігнорується', () => {
+    const s = advance(mk(), [early(T0 - MIN, 100, 110, 97, 100)], 'intraday', T0 + 5 * MIN);
+    expect(s.status).toBe('pending');
+    expect(s.fillPrice).toBeNull();
+    expect(s.lastCheckedTs).toBe(T0 - 1);
+    const s2 = advance(mk(), [early(T0 - MIN, 100, 110, 97, 100), early(T0, 100, 100.5, 99.5, 100)], 'intraday', T0 + 5 * MIN);
+    expect(s2.status).toBe('open');
+    expect(s2.filledAt).toBe(T0);
+  });
+  it('createdAt не на межі хвилини: свічка, що почалась до створення, ігнорується', () => {
+    const st = initialState(longCand(), 'intraday', T0 + 30_000);
+    expect(st.lastCheckedTs).toBe(T0 + MIN - 1);
+    const s = advance(st, [early(T0, 100, 110, 97, 100), early(T0 + MIN, 100, 100.5, 99.5, 100)], 'intraday', T0 + 5 * MIN);
+    expect(s.filledAt).toBe(T0 + MIN);
   });
 });
 

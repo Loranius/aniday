@@ -48,8 +48,14 @@ class RunCtx {
   private spendP?: Promise<{ today: number; month: number }>;
   private spend = { today: 0, month: 0 };
   reviews = 0;
+  readonly startedAt: number;
   scalpSent: number | null = null;
-  constructor(readonly deps: Deps) {}
+  constructor(readonly deps: Deps) {
+    this.startedAt = deps.now();
+  }
+  reviewDeadlinePassed(): boolean {
+    return this.deps.now() - this.startedAt >= SIGNALS_CONFIG.scan.reviewDeadlineMs;
+  }
 
   settings(): Promise<SettingsT> {
     return (this.settingsP ??= this.deps.repo.getSettings());
@@ -95,12 +101,12 @@ function applyReview(c: Candidate, review: Review): Candidate {
   const sign = c.direction === 'long' ? 1 : -1;
   if (review.stop === undefined) return { ...c, tp1: review.tp1 as number };
   const R = Math.abs(mid - review.stop);
-  return {
-    ...c,
-    stop: review.stop,
-    tp1: review.tp1 ?? mid + sign * tpR[0] * R,
-    tp2: tpR.length > 1 ? mid + sign * tpR[1] * R : null,
-  };
+  const tp2 = tpR.length > 1 ? mid + sign * tpR[1] * R : null;
+  const defTp1 = mid + sign * tpR[0] * R;
+  let tp1 = review.tp1 ?? defTp1;
+  // tp1 від Claude перевірявся проти старого tp2 — після перерахунку перевіряємо знову
+  if (tp2 !== null && (c.direction === 'long' ? tp1 >= tp2 : tp1 <= tp2)) tp1 = defTp1;
+  return { ...c, stop: review.stop, tp1, tp2 };
 }
 
 async function processMode(mode: Mode, found: Found[], ctx: RunCtx, report: ModeReport): Promise<void> {
@@ -141,6 +147,12 @@ async function processMode(mode: Mode, found: Found[], ctx: RunCtx, report: Mode
   });
   const jobs: Promise<Outcome | null>[] = [];
   for (const f of eligible) {
+    // пізній старт рецензії не вкладається у ліміт функції: не запускаємо й не зберігаємо
+    if (ctx.reviewDeadlinePassed()) {
+      report.skipped++;
+      if (mode === 'scalp') ctx.scalpSent!--;
+      continue;
+    }
     if (!ctx.canSpendNow()) {
       jobs.push(Promise.resolve({ f, group: 'no_claude', review: null }));
       continue;

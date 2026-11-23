@@ -32,6 +32,6 @@ describe('computeStats', () => {
   });
   it('empty bucket has zeros', () => {
     const r = computeStats([], null);
-    expect(r.byGroup.shadow).toEqual({ total: 0, notFilled: 0, closed: 0, wins: 0, winRate: 0, avgR: 0, sumR: 0 });
+    expect(r.byGroup.shadow).toEqual({ total: 0, notFilled: 0, closed: 0, wins: 0, winRate: null, avgR: null, sumR: 0 });
   });
 });

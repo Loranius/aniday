@@ -45,7 +45,7 @@ export function detectIntraday(symbol: string, c15: Candle[], c1h: Candle[]): Ca
 
   // Фільтр: RSI і гістограма MACD
   const rsiV = rsi(closes, T.rsiPeriod)[n - 1];
-  const { hist } = macd(closes);
+  const { hist } = macd(closes, T.macdFast, T.macdSlow, T.macdSignal);
   const h = hist[n - 1];
   const hPrev = hist[n - 2];
   if (![rsiV, h, hPrev].every(Number.isFinite)) return null;

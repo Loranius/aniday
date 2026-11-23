@@ -28,6 +28,9 @@ describe('formatSignal', () => {
     expect(t).toContain('TP2: 146.90');
     expect(t).toContain('(2%)');
   });
+  it('рядок позиції показує базову монету після qty', () => {
+    expect(formatSignal(cand, sizing, 'confirmed', 'x', deadline, 2)).toContain('Позиція: 0.7 SOL ≈ $100');
+  });
   it('no_claude', () => {
     expect(formatSignal(cand, sizing, 'no_claude', null, deadline, 2)).toContain('⚠️ без перевірки Claude');
   });
@@ -75,6 +78,13 @@ describe('formatStats', () => {
   });
 });
 
+describe('formatStats без закритих', () => {
+  it('win і сер. показуються як —', () => {
+    const r = computeStats([{ mode: 'scalp', group: 'confirmed', status: 'not_filled', resultR: null, createdAt: 1 }], null);
+    expect(formatStats(r, 0)).toContain('win — · сер. —');
+  });
+});
+
 describe('createTelegram', () => {
   it('шле sendMessage і повертає message_id', async () => {
     const f = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ok: true, result: { message_id: 42 } }) });
@@ -83,7 +93,14 @@ describe('createTelegram', () => {
     const [url, init] = f.mock.calls[0];
     expect(url).toBe('https://api.telegram.org/botTOK/sendMessage');
     const body = JSON.parse(init.body);
-    expect(body).toMatchObject({ chat_id: '99', text: 'hi', parse_mode: 'HTML', disable_web_page_preview: true, reply_to_message_id: 7 });
+    expect(body).toMatchObject({ chat_id: '99', text: 'hi', parse_mode: 'HTML', disable_web_page_preview: true, reply_to_message_id: 7, allow_sending_without_reply: true });
+  });
+  it('без replyTo не додає reply-полів', async () => {
+    const f = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ result: { message_id: 1 } }) });
+    await createTelegram('TOK', '99', f as any).send('hi');
+    const body = JSON.parse(f.mock.calls[0][1].body);
+    expect(body).not.toHaveProperty('reply_to_message_id');
+    expect(body).not.toHaveProperty('allow_sending_without_reply');
   });
   it('не кидає на помилці', async () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});

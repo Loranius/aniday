@@ -13,8 +13,8 @@ export interface Bucket {
   notFilled: number;
   closed: number;
   wins: number;
-  winRate: number;
-  avgR: number;
+  winRate: number | null;
+  avgR: number | null;
   sumR: number;
 }
 
@@ -44,8 +44,8 @@ function bucket(rows: StatRow[]): Bucket {
     notFilled,
     closed,
     wins,
-    winRate: closed ? wins / closed : 0,
-    avgR: closed ? sumR / closed : 0,
+    winRate: closed ? wins / closed : null,
+    avgR: closed ? sumR / closed : null,
     sumR,
   };
 }

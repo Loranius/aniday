@@ -25,11 +25,11 @@ export const SIGNALS_CONFIG = {
   cache: { readMult: 0.1, writeMult: 1.25 },
   claude: {
     maxTokens: 2000,
-    maxRetries: 1,
+    maxRetries: 0,
     candlesInPrompt: 40,
     reasonMaxChars: 200,
-    timeoutMs: { 'claude-haiku-5-5': 20_000, 'claude-sonnet-5-5': 40_000 } as Record<string, number>,
-    defaultTimeoutMs: 40_000,
+    timeoutMs: { 'claude-haiku-5-5': 10_000, 'claude-sonnet-5-5': 20_000 } as Record<string, number>,
+    defaultTimeoutMs: 20_000,
   },
   sizing: { defaultDepositUsd: 500, maxMarginPct: 20, maxLeverage: 20, mmr: 0.005, highRiskWarnPct: 5 },
   universe: {
@@ -41,6 +41,7 @@ export const SIGNALS_CONFIG = {
     pumpVolLookbackMin: 15,
     pumpOiLookbackMin: 30,
     snapshotToleranceMin: 5,
+    hotMoversN: 10,
   },
   scalpDailyLimit: 10,
   // межі значень, які власник задає командами Telegram
@@ -48,7 +49,9 @@ export const SIGNALS_CONFIG = {
   maxReviewsPerRun: 5,
   scan: {
     snapshotWindowMin: 35, // скільки хвилин снапшотів брати для pumpPrefilter
-    candles: { intraday15m: 120, intraday1h: 220, pump15m: 120, scalp5m: 100, scalp1m: 60 },
+    // запит ≥ мінімум детектора + 2: біржа віддає й свічку, що формується, яку bitget.ts відкидає
+    candles: { intraday15m: 120, intraday1h: 220, pump15m: 150, scalp5m: 100, scalp1m: 70 },
+    reviewDeadlineMs: 35_000, // після цього моменту від старту запуску нові рецензії не стартують
   },
   tracking: { candleLimit: 1000, fiveMinGapHours: 16 },
   tz: 'Europe/Kyiv',
@@ -64,6 +67,9 @@ export const SIGNALS_CONFIG = {
       breakoutLookback: 20,
       volMaLen: 20,
       breakoutVolMult: 1.5,
+      macdFast: 12,
+      macdSlow: 26,
+      macdSignal: 9,
       rsiPeriod: 14,
       rsiMaxLong: 70,
       rsiMinShort: 30,

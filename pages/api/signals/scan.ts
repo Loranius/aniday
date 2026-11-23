@@ -33,10 +33,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       notifier: createTelegram(env.TELEGRAM_BOT_TOKEN, env.TELEGRAM_OWNER_ID),
       now: () => Date.now(),
     };
-    const scan = await runScan(job, deps);
-    if (job === 'scalp') return res.status(200).json({ job, scan });
-    const tracking = await runTracking(deps);
-    return res.status(200).json({ job, scan, tracking });
+    if (job === 'scalp') {
+      const scan = await runScan(job, deps);
+      return res.status(200).json({ job, scan });
+    }
+    // swing: спершу трекінг (швидкий, закриває угоди), потім скан; збій одного не скасовує інше
+    let tracking: Awaited<ReturnType<typeof runTracking>> | undefined;
+    let scan: Awaited<ReturnType<typeof runScan>> | undefined;
+    const errors: string[] = [];
+    try {
+      tracking = await runTracking(deps);
+    } catch (e) {
+      console.error('signals/scan tracking error', e);
+      errors.push(`tracking: ${e instanceof Error ? e.message : String(e)}`);
+    }
+    try {
+      scan = await runScan('swing', deps);
+    } catch (e) {
+      console.error('signals/scan swing error', e);
+      errors.push(`scan: ${e instanceof Error ? e.message : String(e)}`);
+    }
+    if (tracking === undefined && scan === undefined) return res.status(500).json({ error: 'Internal error' });
+    return res.status(200).json({ job, tracking, scan, ...(errors.length ? { errors } : {}) });
   } catch (e) {
     console.error('signals/scan error', e);
     return res.status(500).json({ error: 'Internal error' });

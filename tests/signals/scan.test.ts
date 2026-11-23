@@ -147,6 +147,22 @@ describe('runScan swing', () => {
     expect(s.tp2).toBeCloseTo(mid + 3 * R, 6);
   });
 
+  it('tp1 від Claude, що виявився за новим tp2, замінюється на entry ± tpR[0]·R', async () => {
+    await runScan('swing', deps());
+    const base = repo.signals[0];
+    const mid = (base.entryLow + base.entryHigh) / 2;
+    const newStop = mid - (mid - base.stop) * 0.3; // менший R → новий tp2 ближче за старий tp1
+    repo = new FakeRepo();
+    reviewer.review_ = { decision: 'confirm', reason: 'ок', stop: newStop, tp1: base.tp1 };
+    await runScan('swing', deps());
+    const s = repo.signals[0];
+    const R = mid - newStop;
+    expect(s.tp2).toBeCloseTo(mid + 3 * R, 6);
+    expect(base.tp1).toBeGreaterThan(s.tp2 as number);
+    expect(s.tp1).toBeCloseTo(mid + 1.5 * R, 6);
+    expect(s.tp1).toBeLessThan(s.tp2 as number);
+  });
+
   it('не більше maxReviewsPerRun рецензій; решта в skipped', async () => {
     const syms = Array.from({ length: 8 }, (_, i) => `COIN${i}USDT`);
     market.tickerList = syms.map((s) => tk(s, 9e9));
@@ -154,6 +170,36 @@ describe('runScan swing', () => {
     const r = await runScan('swing', deps());
     expect(reviewer.calls).toHaveLength(5);
     expect(intraday(r)).toMatchObject({ candidates: 8, sent: 5, skipped: 3 });
+  });
+});
+
+describe('дедлайн рецензій', () => {
+  class SlowReviewer extends FakeReviewer {
+    constructor(private bump: () => void) { super(); }
+    async review(c: Parameters<FakeReviewer['review']>[0]) { this.bump(); return super.review(c); }
+  }
+  const setup = () => {
+    const syms = Array.from({ length: 3 }, (_, i) => `COIN${i}USDT`);
+    market.tickerList = syms.map((s) => tk(s, 9e9));
+    for (const s of syms) market.data[s] = { '15m': breakout15(), '1H': c1h() };
+  };
+
+  it('після reviewDeadlineMs нові рецензії не стартують: skipped, не no_claude, не збережено', async () => {
+    setup();
+    reviewer = new SlowReviewer(() => { now += 36_000; });
+    const r = await runScan('swing', deps());
+    expect(reviewer.calls).toHaveLength(1);
+    expect(intraday(r)).toMatchObject({ candidates: 3, sent: 1, skipped: 2 });
+    expect(repo.signals).toHaveLength(1);
+    expect(repo.signals.some((s) => s.group === 'no_claude')).toBe(false);
+  });
+
+  it('до дедлайну рецензії проходять усі', async () => {
+    setup();
+    reviewer = new SlowReviewer(() => { now += 1_000; });
+    const r = await runScan('swing', deps());
+    expect(reviewer.calls).toHaveLength(3);
+    expect(intraday(r)).toMatchObject({ sent: 3, skipped: 0 });
   });
 });
 
@@ -176,12 +222,12 @@ describe('review-safety', () => {
 
 describe('runScan scalp', () => {
   it('без кандидатів → жодного виклику repo', async () => {
-    market.data.SOLUSDT = { '5m': makeCandles(new Array(100).fill(100), 300_000), '1m': makeCandles(new Array(60).fill(100), 60_000) };
+    market.data.SOLUSDT = { '5m': makeCandles(new Array(100).fill(100), 300_000), '1m': makeCandles(new Array(70).fill(100), 60_000) };
     market.data.BTCUSDT = market.data.SOLUSDT;
     const r = await runScan('scalp', deps());
     expect(repo.calls).toEqual([]);
     expect(r).toEqual([{ mode: 'scalp', candidates: 0, sent: 0, shadow: 0, skipped: 0, errors: [] }]);
     expect(market.calls.some((c) => c.g === '5m' && c.limit === 100)).toBe(true);
-    expect(market.calls.some((c) => c.g === '1m' && c.limit === 60)).toBe(true);
+    expect(market.calls.some((c) => c.g === '1m' && c.limit === 70)).toBe(true);
   });
 });

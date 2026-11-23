@@ -28,7 +28,7 @@ describe('claude reviewer', () => {
     expect(params.max_tokens).toBe(2000);
     expect(params.output_config.effort).toBe('low');
     expect(params.temperature).toBeUndefined();
-    expect(opts).toEqual({ timeout: 40000, maxRetries: 1 });
+    expect(opts).toEqual({ timeout: 20000, maxRetries: 0 });
     const user = JSON.parse(params.messages[0].content);
     expect(user.candles).toHaveLength(40);
   });
@@ -36,7 +36,7 @@ describe('claude reviewer', () => {
     const { client, parse } = mk({ parsed_output: { decision: 'reject', reason: 'x' }, stop_reason: 'end_turn', usage });
     await createClaudeReviewer(client).review(cand({ mode: 'scalp' }), { candles });
     expect(parse.mock.calls[0][0].model).toBe('claude-haiku-5-5');
-    expect(parse.mock.calls[0][1].timeout).toBe(20000);
+    expect(parse.mock.calls[0][1].timeout).toBe(10000);
   });
   it('reject passes through', async () => {
     const { client } = mk({ parsed_output: { decision: 'reject', reason: 'слабко' }, stop_reason: 'end_turn', usage });
@@ -79,6 +79,14 @@ describe('claude reviewer', () => {
     const { client } = mk({ parsed_output: { decision: 'confirm', reason: 'r', stop: 95 }, stop_reason: 'end_turn', usage });
     const r = await createClaudeReviewer(client).review(cand(), { candles });
     expect(r.review).toEqual({ decision: 'confirm', reason: 'r' });
+  });
+  it('обрізання reason не розриває сурогатні пари', async () => {
+    const reason = '😀'.repeat(250);
+    const { client } = mk({ parsed_output: { decision: 'reject', reason }, stop_reason: 'end_turn', usage });
+    const r = await createClaudeReviewer(client).review(cand(), { candles });
+    const out = (r.review as { reason: string }).reason;
+    expect(Array.from(out)).toHaveLength(200);
+    expect(out).toBe('😀'.repeat(200));
   });
   it('short: stop must be above zone', async () => {
     const { client } = mk({ parsed_output: { decision: 'confirm', reason: 'r', stop: 99 }, stop_reason: 'end_turn', usage });
